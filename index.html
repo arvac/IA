@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prototipo Power Apps - Apertura de Cuentas PJ/PN</title>
+  <style>
+    :root{
+      --teal:#079aa0;
+      --teal-dark:#067f84;
+      --bg:#ececec;
+      --line:#d4d4d4;
+    }
+    *{box-sizing:border-box;font-family:Segoe UI,Arial,sans-serif}
+    body{margin:0;background:#f2f2f2;color:#111}
+    .topbar{background:var(--teal);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;font-weight:700}
+    .container{max-width:1260px;margin:0 auto;background:#f3f3f3;min-height:100vh;border-left:1px solid #ddd;border-right:1px solid #ddd}
+    .hero{height:88vh;display:flex;align-items:center;justify-content:center;flex-direction:column;position:relative;background:#f7f7f7}
+    .hero h1{font-size:58px;margin:0;color:var(--teal)}
+    .hero p{font-size:32px;margin:8px 0 0}
+    .hero small{position:absolute;right:28px;bottom:24px;color:#777;font-size:28px}
+    .screen{display:none;padding-bottom:20px}
+    .screen.active{display:block}
+    .title{font-size:38px;text-align:center;padding:16px 0;font-weight:800}
+    .actions{display:flex;justify-content:space-between;padding:16px}
+    .btn{border:2px solid var(--teal-dark);background:white;color:#111;padding:10px 24px;border-radius:10px;font-size:30px;font-weight:700;cursor:pointer}
+    .btn.primary{background:var(--teal-dark);color:white}
+    .filters,.grid{margin:0 16px;background:white;border:1px solid #ddd;border-radius:8px;overflow:hidden}
+    .section-title{background:var(--teal);color:#fff;text-align:center;font-weight:800;padding:8px;font-size:34px}
+    .row{display:flex;gap:8px;padding:10px}
+    .field{flex:1}
+    .field label{display:block;font-size:24px;margin-bottom:5px}
+    input,select,textarea{width:100%;padding:10px;border:2px solid var(--teal);border-radius:10px;background:#f6f6f6;font-size:22px}
+    table{width:100%;border-collapse:collapse;font-size:24px}
+    th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}
+    th{font-weight:800;background:#f4f4f4}
+    .tabs{display:flex;gap:2px;padding:8px 8px 0}
+    .tab{padding:10px 18px;border:1px solid #c9c9c9;background:#e7e7e7;border-radius:8px 8px 0 0;font-weight:700;cursor:pointer;font-size:23px}
+    .tab.active{background:#b9dbe2}
+    .footer-nav{display:flex;justify-content:center;gap:12px;padding:18px}
+    .pill{display:inline-block;background:#fff;padding:4px 10px;border-radius:20px;border:2px solid #1ea9d8;font-size:18px;margin-left:8px}
+    .notes{margin:16px;background:#fff;border:1px dashed #bbb;padding:12px;border-radius:8px;font-size:22px}
+    .modal-backdrop{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center}
+    .modal{background:#dddcd1;border:2px solid #123;padding:24px;width:420px;position:relative}
+    .close{position:absolute;right:12px;top:6px;font-size:42px;cursor:pointer}
+    .center{text-align:center}
+    .small{font-size:20px;color:#555}
+  </style>
+</head>
+<body>
+<div class="container">
+  <section id="portada" class="screen active">
+    <div class="hero">
+      <h1>Apertura de Cuentas</h1>
+      <p>Personas Jurídicas</p>
+      <p style="margin-top:60px;font-size:68px;color:var(--teal);font-weight:800">45 años</p>
+      <p style="color:var(--teal);font-weight:700">Eres lo que nos mueve</p>
+      <button class="btn primary" onclick="go('bandeja')">Ingresar</button>
+      <small>11/12/2025</small>
+    </div>
+  </section>
+
+  <section id="bandeja" class="screen">
+    <div class="topbar"><span>Banco Bolivariano</span><span>Hola, Tiffany Corgraints · Agencia: Matriz</span></div>
+    <div class="title">Ingreso de Solicitudes</div>
+    <div class="actions"><div></div><button class="btn primary" onclick="go('pj')">Crear Solicitud +</button></div>
+    <div class="filters">
+      <div class="row">
+        <div class="field"><label>Fecha inicio</label><input placeholder="dd/mm/aaaa"></div>
+        <div class="field"><label>Fecha fin</label><input placeholder="dd/mm/aaaa"></div>
+        <div class="field"><label>RUC</label><input></div>
+        <div class="field"><label>Razón social</label><input></div>
+        <div class="field"><label>Estado</label><select><option>Todos</option><option>Solicitud ingresada</option></select></div>
+      </div>
+      <div class="section-title">Bandeja de Solicitudes</div>
+      <table>
+        <thead><tr><th>Fecha</th><th>Nro Solicitud</th><th>RUC</th><th>Razón Social</th><th>Oficina</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>
+          <tr><td>18/01/2026</td><td>00000003</td><td>0915149389001</td><td>Cia. Zamora</td><td>Matriz</td><td>Solicitud ingresada</td><td><button class="btn" style="padding:4px 12px" onclick="go('pj')">✏️</button> <button class="btn" style="padding:4px 12px" onclick="openDelete()">🗑️</button></td></tr>
+          <tr><td>15/01/2026</td><td>00000002</td><td>0915874589001</td><td>Comercial La Moneda</td><td>Policentro</td><td>Excepción</td><td><button class="btn" style="padding:4px 12px" onclick="go('pj')">✏️</button></td></tr>
+        </tbody>
+      </table>
+      <p class="center"><b>&lt; Página 1 de 1 &gt;</b><br>3 registros encontrados</p>
+    </div>
+  </section>
+
+  <section id="pj" class="screen">
+    <div class="topbar"><span>BANCO BOLIVARIANO</span><span>Formulario Ingreso/Actualización de Información del Cliente</span><span>Hola, Tiffany · Matriz</span></div>
+    <div class="tabs">
+      <div class="tab active" onclick="tab('pj',0)">Información del Cliente PJ</div>
+      <div class="tab" onclick="tab('pj',1)">Información Producto</div>
+      <div class="tab" onclick="tab('pj',2)">Condiciones de firmas</div>
+      <div class="tab" onclick="tab('pj',3)">Beneficiarios Finales</div>
+      <div class="tab" onclick="go('pn')">Información cliente PN</div>
+    </div>
+    <div id="pj-content"></div>
+    <div class="footer-nav">
+      <button class="btn" onclick="go('bandeja')">Bandeja</button>
+      <button class="btn" onclick="prevPj()">Anterior</button>
+      <button class="btn primary">Guardar</button>
+      <button class="btn" onclick="nextPj()">Siguiente</button>
+      <button class="btn" onclick="go('resumen')">Resumen</button>
+    </div>
+    <p class="center"><b>&lt; Página <span id="pjPage">1</span> de 4 página(s) &gt;</b></p>
+  </section>
+
+  <section id="pn" class="screen">
+    <div class="topbar"><span>BANCO BOLIVARIANO</span><span>Ingreso/Actualización de Personas Naturales</span><span>Hola, Tiffany · Matriz</span></div>
+    <div id="pn-content"></div>
+    <div class="footer-nav">
+      <button class="btn" onclick="go('bandeja')">Bandeja</button>
+      <button class="btn" onclick="prevPn()">Anterior</button>
+      <button class="btn primary">Guardar</button>
+      <button class="btn" onclick="nextPn()">Siguiente</button>
+      <button class="btn" onclick="go('pj')">Volver PJ</button>
+    </div>
+    <p class="center"><b>&lt; Página <span id="pnPage">1</span> de 3 página(s) &gt;</b></p>
+  </section>
+
+  <section id="resumen" class="screen">
+    <div class="title">Reglas del formulario / Flujo de interacción</div>
+    <div class="notes">
+      <h3>Cliente nuevo vs existente</h3>
+      <p><b>Nuevo:</b> Vinculación PJ (obligatorio), Condición de firmas (obligatorio), Beneficiario final (obligatorio), Vinculación PN (opcional).</p>
+      <p><b>Existente:</b> Vinculación PJ (obligatorio), Condición de firmas (obligatorio), Beneficiario final (opcional), Vinculación PN (opcional).</p>
+      <ol>
+        <li>Al ingresar a cada pantalla se consulta información en MIS.</li>
+        <li>Evento para generación de PDF según cambios.</li>
+        <li>Si RUC es nuevo, se permite escoger el formulario opcional.</li>
+      </ol>
+      <button class="btn primary" onclick="go('bandeja')">Volver a bandeja</button>
+    </div>
+  </section>
+</div>
+
+<div class="modal-backdrop" id="deleteModal">
+  <div class="modal">
+    <div class="close" onclick="closeDelete()">×</div>
+    <label>Motivo de eliminación</label>
+    <textarea rows="3"></textarea>
+    <div style="margin-top:14px" class="center"><button class="btn primary" onclick="closeDelete()">Guardar</button></div>
+  </div>
+</div>
+
+<script>
+  const pjViews = [
+`<div class="section-title">Información de la Empresa</div>
+<div class="row"><div class="field"><label>RUC</label><input></div><div class="field"><label>Oficial solicitante</label><input></div><div class="field"><label>Clasificación de empresa</label><select><option>Público</option><option>Privado</option><option>Mixto</option></select></div></div>
+<div class="row"><div class="field"><label>Razón social</label><input></div><div class="field"><label>Fecha constitución</label><input></div><div class="field"><label>Actividad económica</label><input></div></div>
+<div class="section-title">Información de Dirección - Ecuador</div>
+<div class="row"><div class="field"><label>Ciudad</label><select><option>Guayaquil</option></select></div><div class="field"><label>Parroquia</label><input></div><div class="field"><label>Dirección</label><input></div></div>`,
+`<div class="section-title">Información Producto</div>
+<div class="row"><div class="field"><label>Tipo de cuenta</label><select><option>Ahorro</option><option>Corriente</option></select></div><div class="field"><label>Producto bancario</label><select><option>Cuenta empresarial</option></select></div><div class="field"><label>Depósito inicial</label><input value="$ 300"></div></div>
+<div class="section-title">Contactos</div>
+<table><thead><tr><th>Nombres</th><th>Cargo</th><th>Correo</th><th>Acción</th></tr></thead><tbody><tr><td>María Cedeño</td><td>Contadora</td><td>maria@empresa.com</td><td>✏️ 🗑️</td></tr></tbody></table>`,
+`<div class="section-title">Condiciones de Firmas</div>
+<div class="row"><div class="field"><label>Tipo de ID</label><select><option>Cédula</option></select></div><div class="field"><label>No. identificación</label><input value="0915149388"></div><div class="field"><label>Nombres y apellidos</label><input value="José Bolívar Arcos"></div></div>
+<table><thead><tr><th>Tipo ID</th><th>No. Identificación</th><th>Nombres</th><th>Acciones</th></tr></thead><tbody><tr><td>Cédula</td><td>0915149388</td><td>José Bolívar Arcos Pineda</td><td>✏️ 🗑️</td></tr></tbody></table>
+<div class="section-title">Combinaciones de firmas</div><div class="row"><div class="field"><label>Individual</label><input></div><div class="field"><label>Conjuntas</label><input></div><div class="field"><label>Monto</label><input value="$0,00"></div></div>`,
+`<div class="section-title">Beneficiarios Finales</div>
+<div class="row"><div class="field"><label>Tipo beneficiario</label><select><option>Directo</option><option>Indirecto</option></select></div><div class="field"><label>Identificación</label><input></div><div class="field"><label>Nombres completos</label><input></div></div>
+<table><thead><tr><th>Tipo ID</th><th>No. Identificación</th><th>Nombre</th><th>Nacionalidad</th><th>PEP</th><th>Acción</th></tr></thead><tbody><tr><td>Cédula</td><td>0915149388</td><td>José Bolívar Arcos Pineda</td><td>Ecuatoriana</td><td>No</td><td>✏️ 🗑️</td></tr></tbody></table>
+<div class="row"><div class="field"><label>Observaciones</label><textarea rows="3"></textarea></div></div>`
+  ];
+
+  const pnViews = [
+`<div class="section-title">Información General del Cliente</div>
+<div class="row"><div class="field"><label>Tipo de ID</label><select><option>Cédula</option></select></div><div class="field"><label>No. identificación</label><input></div><div class="field"><label>Nombres</label><input></div><div class="field"><label>Apellidos</label><input></div></div>
+<div class="row"><div class="field"><label>País de residencia</label><select><option>Ecuador</option><option>Otro</option></select></div><div class="field"><label>Nacionalidad</label><input></div><div class="field"><label>Fecha nacimiento</label><input></div></div>`,
+`<div class="section-title">Preguntas FATCA y CRS</div>
+<div class="row"><div class="field"><label>¿PEP?</label><select><option>No</option><option>Sí</option></select></div><div class="field"><label>Situación laboral</label><select><option>Dependiente</option><option>Independiente</option></select></div><div class="field"><label>Tipo empleado</label><select><option>Público</option><option>Privado</option></select></div></div>
+<div class="section-title">Direcciones y Teléfonos - Domicilio</div>
+<div class="row"><div class="field"><label>Ciudad</label><input></div><div class="field"><label>Dirección</label><input></div><div class="field"><label>Teléfono</label><input></div></div>`,
+`<div class="section-title">Direcciones y Teléfonos - Trabajo</div>
+<div class="row"><div class="field"><label>Ciudad</label><input></div><div class="field"><label>Correo</label><input></div><div class="field"><label>Celular</label><input></div></div>
+<div class="section-title">Estado de Situación Económica</div>
+<div class="row"><div class="field"><label>Total ingresos</label><input></div><div class="field"><label>Total egresos</label><input></div><div class="field"><label>Activos</label><input></div><div class="field"><label>Pasivos</label><input></div></div>`
+  ];
+
+  let pjIndex = 0, pnIndex = 0;
+  function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');renderPj();renderPn();}
+  function renderPj(){
+    document.getElementById('pj-content').innerHTML = pjViews[pjIndex];
+    document.getElementById('pjPage').textContent = pjIndex+1;
+    document.querySelectorAll('#pj .tab').forEach((t,i)=>t.classList.toggle('active',i===pjIndex));
+  }
+  function renderPn(){document.getElementById('pn-content').innerHTML = pnViews[pnIndex];document.getElementById('pnPage').textContent = pnIndex+1;}
+  function tab(_,i){pjIndex=i;renderPj();}
+  function nextPj(){if(pjIndex<3){pjIndex++;renderPj()} else go('pn');}
+  function prevPj(){if(pjIndex>0){pjIndex--;renderPj()}}
+  function nextPn(){if(pnIndex<2){pnIndex++;renderPn()} else go('resumen');}
+  function prevPn(){if(pnIndex>0){pnIndex--;renderPn()}}
+  function openDelete(){document.getElementById('deleteModal').style.display='flex'}
+  function closeDelete(){document.getElementById('deleteModal').style.display='none'}
+  renderPj();renderPn();
+</script>
+</body>
+</html>
