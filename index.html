@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apertura de Cuentas - Personas Jurídicas</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Header (Visible in Dashboard and Form Views) -->
+    <header class="app-header" id="appHeader" style="display: none;">
+        <div class="logo-area">
+            <h1>BANCO BOLIVARIANO</h1>
+        </div>
+        <div class="title-area">
+            <h2 id="headerTitle">Ingreso de Solicitudes</h2>
+        </div>
+        <div class="user-area">
+            <div class="user-info">
+                <span class="user-name">Hola, Tiffany Congraints</span>
+                <span class="user-agency">Agencia: Matriz</span>
+            </div>
+            <div class="user-avatar">
+                <i class="fa-solid fa-circle-user"></i>
+                <span class="status-dot"></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- View 1: Welcome Splash Screen -->
+    <div id="view-welcome" class="view-container active-view">
+        <div class="welcome-content">
+            <div class="welcome-titles">
+                <h1>Apertura de Cuentas</h1>
+                <h2>Personas Jurídicas</h2>
+            </div>
+            <div class="welcome-logo">
+                <div class="logo-45">
+                    <!-- Text representation of the logo -->
+                    <span class="l-45">45</span>
+                    <span class="l-anos">años</span>
+                    <span class="l-bb">B</span>
+                </div>
+                <p class="slogan">Eres lo que nos mueve</p>
+            </div>
+        </div>
+        <div class="welcome-graphics">
+             <!-- Placeholder for right-side graphics -->
+             <div class="graphic top-right"></div>
+             <div class="graphic middle-right"></div>
+             <div class="graphic bottom-right"></div>
+        </div>
+        <div class="welcome-footer">11/12/2025</div>
+        <button class="btn enter-btn" onclick="navigateTo('view-dashboard')">Ingresar al Sistema</button>
+    </div>
+
+    <!-- View 2: Dashboard / Solicitudes -->
+    <div id="view-dashboard" class="view-container" style="display: none;">
+        
+        <div class="top-actions">
+            <button class="btn btn-primary btn-crear" onclick="navigateTo('view-forms')">Crear Solicitud</button>
+        </div>
+
+        <div class="filters-section">
+            <div class="filter-group">
+                <label>Fecha de Ingreso Inicio</label>
+                <div class="input-icon"><input type="date"><i class="fa-regular fa-calendar"></i></div>
+            </div>
+            <div class="filter-group">
+                <label>Fecha de Ingreso Fin</label>
+                <div class="input-icon"><input type="date"><i class="fa-regular fa-calendar"></i></div>
+            </div>
+            <div class="filter-group">
+                <label>RUC</label>
+                <div class="input-icon"><input type="text"><i class="fa-solid fa-magnifying-glass"></i></div>
+            </div>
+            <div class="filter-group">
+                <label>Razón social</label>
+                <div class="input-icon"><input type="text"><i class="fa-solid fa-magnifying-glass"></i></div>
+            </div>
+            <div class="filter-group">
+                <label>Oficial/ Ejecutivo Solicitante</label>
+                <div class="input-icon"><input type="text" value="Usuario COBIS"><i class="fa-solid fa-magnifying-glass"></i></div>
+            </div>
+            <div class="filter-group">
+                <label>Estado</label>
+                <select><option></option></select>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-icon-only btn-add-filter"><i class="fa-solid fa-plus"></i></button>
+                <button class="btn btn-clear"><i class="fa-solid fa-eraser"></i> Limpiar Filtros</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header-bar">Bandeja de Solicitudes</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Fecha de Ingreso <i class="fa-solid fa-arrow-down-up-across-line"></i></th>
+                        <th>Nro. Solicitud</th>
+                        <th>RUC</th>
+                        <th>Razón Social</th>
+                        <th>Oficial/ Ejecutivo Sol.</th>
+                        <th>Oficina</th>
+                        <th>Caso BPM</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>18/01/2026</td>
+                        <td>00000003</td>
+                        <td><a href="#">0915149389001</a></td>
+                        <td>Cia. Zamora</td>
+                        <td>xxxxxxxx</td>
+                        <td>Matriz</td>
+                        <td></td>
+                        <td>Solicitud ingresada</td>
+                        <td class="actions-cell">
+                            <i class="fa-solid fa-pen action-icon"></i>
+                            <i class="fa-solid fa-trash btn-delete"></i>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>15/01/2026</td>
+                        <td>00000002</td>
+                        <td><a href="#">0915874589001</a></td>
+                        <td>Comercial La Moneda</td>
+                        <td>xxxxxxxx</td>
+                        <td>Policentro</td>
+                        <td></td>
+                        <td>Excepción</td>
+                        <td class="actions-cell">
+                            <i class="fa-solid fa-pen action-icon"></i>
+                            <i class="fa-solid fa-trash btn-delete"></i>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>10/01/2026</td>
+                        <td>00000001</td>
+                        <td><a href="#">1687569389001</a></td>
+                        <td>Restaurant La Laguna</td>
+                        <td>xxxxxxxx</td>
+                        <td>Urdesa</td>
+                        <td></td>
+                        <td>Listo para crear</td>
+                        <td class="actions-cell">
+                            <i class="fa-solid fa-pen action-icon"></i>
+                            <i class="fa-solid fa-trash btn-delete"></i>
+                            <i class="fa-solid fa-money-check action-icon ready-icon"></i>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="pagination">
+                <p>&lt; Página 1 de 1 página(s) &gt;</p>
+                <p>3 registros encontrados</p>
+            </div>
+        </div>
+
+        <div class="roles-info">
+            <p><strong>Rol aplicativo que ingresa la solicitud a Power Plattform:</strong></p>
+            <ul>
+                <li><strong>Registrador de Solicitudes: Asesor Comercial Operativo / Asistente Banca Empresa /Ejecutivo Comercial</strong></li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- View 3: Forms Tabs -->
+    <div id="view-forms" class="view-container" style="display: none;">
+        
+        <div class="tabs-header">
+            <div class="tabs-list">
+                <div class="tab active" onclick="switchTab('tab-cliente', this)">Información del Cliente PJ</div>
+                <div class="tab" onclick="switchTab('tab-producto', this)">Información Producto</div>
+                <div class="tab" onclick="switchTab('tab-firmas', this)">Condiciones de firmas</div>
+                <div class="tab" onclick="switchTab('tab-beneficiarios', this)">Beneficiarios Finales</div>
+            </div>
+            <button class="btn btn-pdf">PDF</button>
+        </div>
+
+        <div class="tab-content-area">
+            
+            <!-- TAB 1: Información del Cliente PJ -->
+            <div id="tab-cliente" class="tab-pane active-tab">
+                
+                <div class="form-row">
+                    <div class="form-group col-2">
+                        <label>RUC</label>
+                        <div class="input-icon"><input type="text"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    </div>
+                    <div class="form-group col-2">
+                        <label>Oficial/ Ejecutivo Solicitante</label>
+                        <div class="input-icon"><input type="text"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    </div>
+                    <div class="form-group col-3 bg-grey-input">
+                        <label>&nbsp;</label>
+                        <input type="text" disabled value="Nombre del Funcionario">
+                    </div>
+                    <div class="form-group col-3">
+                        <label>Clasificación de Empresa</label>
+                        <select><option></option></select>
+                    </div>
+                    <div class="form-group col-2 radio-group-vertical">
+                        <label><input type="radio" name="vinculacion"> Vinculación</label>
+                        <label><input type="radio" name="vinculacion"> Actualización</label>
+                    </div>
+                </div>
+
+                <div class="section-divider">Información de la Empresa</div>
+                
+                <div class="form-row">
+                    <div class="form-group col-3">
+                        <label>Razón Social</label>
+                        <input type="text">
+                    </div>
+                    <div class="form-group col-2">
+                        <label>Fecha de constitución</label>
+                        <div class="input-icon"><input type="date"><i class="fa-regular fa-calendar"></i></div>
+                    </div>
+                    <div class="form-group col-3">
+                        <label>País Constitución/Nacionalidad</label>
+                        <select><option></option></select>
+                    </div>
+                    <div class="form-group col-2">
+                        <label>Tipo de Cía</label>
+                        <select><option></option></select>
+                    </div>
+                    <div class="form-group col-2">
+                        <label>Sector</label>
+                        <select><option></option></select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-4">
+                        <label>Nombre Comercial</label>
+                        <input type="text">
+                    </div>
+                    <div class="form-group col-4">
+                        <label>Actividad económica</label>
+                        <select><option></option></select>
+                    </div>
+                    <div class="form-group col-4">
+                        <label>Actividad económica detallada</label>
+                        <select><option></option></select>
+                    </div>
+                </div>
+
+                <div class="section-divider">Información de Dirección - Ecuador</div>
+
+                <div class="form-row">
+                    <div class="form-group col-2">
+                        <label>Ciudad</label>
+                        <select><option></option></select>
+                    </div>
+                    <div class="form-group col-3">
+                        <label>Ciudadela</label>
+                        <select><option></option></select>
+                    </div>
+                    <div class="form-group col-2">
+                        <label>Cantón</label>
+                        <select><option></option></select>
+                    </div>
+                    <div class="form-group col-2">
+                        <label>Parroquia</label>
+                        <select><option></option></select>
+                    </div>
+                    <div class="form-group col-3">
+                        <label>Dirección Comercial</label>
+                        <input type="text">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-2 bg-grey-input">
+                        <label>Sector</label>
+                        <input type="text" disabled>
+                    </div>
+                    <div class="form-group col-6">
+                        <label>Referencia</label>
+                        <input type="text">
+                    </div>
+                    <div class="form-group col-2">
+                        <label>Teléfono convencional</label>
+                        <input type="text">
+                    </div>
+                    <div class="form-group col-1">
+                        <label>Ext.</label>
+                        <input type="text">
+                    </div>
+                </div>
+
+                <div class="form-row inline-radio-group">
+                    <label>Envío correspondencia</label>
+                    <label class="radio-label"><input type="radio" name="envio_corr" checked> <span class="radio-custom"></span> SI</label>
+                    <label class="radio-label"><input type="radio" name="envio_corr"> <span class="radio-custom"></span> NO</label>
+                </div>
+                
+                <div class="section-divider">Información de Dirección - Exterior</div>
+                <!-- ... omitted some fields for brevity to match the main layout flow ... -->
+
+                <!-- FATCA / CRS -->
+                 <div class="section-divider">Preguntas FATCA y CRS</div>
+                 <table class="fatca-table">
+                     <tr>
+                         <td>¿La empresa reporta a la Superintendencia de Bancos del Ecuador, o brinda servicios relacionados con captación de recursos a nombre de terceros, custodia de títulos, servicios fiduciarios, fondos o seguros?</td>
+                         <td class="radio-cells">
+                             <label><input type="radio" name="f1"> SI</label>
+                             <label><input type="radio" name="f1"> NO</label>
+                         </td>
+                         <td rowspan="5" class="fatca-actions">
+                             <label class="todo-radio"><input type="radio" name="todo"> Todo SI</label><br><br>
+                             <label class="todo-radio"><input type="radio" name="todo"> Todo NO</label>
+                         </td>
+                     </tr>
+                     <tr>
+                         <td>¿Cotiza sus acciones en bolsa de valores?</td>
+                         <td class="radio-cells">
+                             <label><input type="radio" name="f2"> SI</label>
+                             <label><input type="radio" name="f2"> NO</label>
+                         </td>
+                     </tr>
+                     <tr>
+                         <td>¿Posee accionistas que tengan una participación accionaria mayor al 10% y que tengan responsabilidad tributaria en Estados Unidos?</td>
+                         <td class="radio-cells">
+                             <label><input type="radio" name="f3"> SI</label>
+                             <label><input type="radio" name="f3"> NO</label>
+                         </td>
+                     </tr>
+                     <tr>
+                         <td>¿Tiene la empresa residencia fiscal para efectos tributarios en Estados Unidos?</td>
+                         <td class="radio-cells">
+                             <label><input type="radio" name="f4"> SI</label>
+                             <label><input type="radio" name="f4"> NO</label>
+                         </td>
+                     </tr>
+                     <tr>
+                         <td>¿Tiene la empresa residencia fiscal para efectos tributarios en otra jurisdicción diferente a Ecuador o Estados Unidos?</td>
+                         <td class="radio-cells">
+                             <label><input type="radio" name="f5"> SI</label>
+                             <label><input type="radio" name="f5"> NO</label>
+                         </td>
+                     </tr>
+                 </table>
+            </div>
+
+            <!-- TAB 2: Información Producto -->
+            <div id="tab-producto" class="tab-pane" style="display: none;">
+                <div class="form-row bg-grey-input">
+                    <div class="form-group col-2">
+                         <label>Identificación</label>
+                         <input type="text" disabled>
+                    </div>
+                    <div class="form-group col-10">
+                         <label>Razón Social</label>
+                         <input type="text" disabled>
+                    </div>
+                </div>
+
+                <div class="form-row align-center-row">
+                    <label class="col-2">Tipo de Cuenta</label>
+                    <div class="col-2 inline-radio-group m-0">
+                         <label class="radio-label"><input type="radio" name="tipo_cta"> Ahorro</label>
+                         <label class="radio-label"><input type="radio" name="tipo_cta"> Corriente</label>
+                    </div>
+                    <div class="form-group col-3 mb-0">
+                         <label class="inline-label">Producto Bancario</label>
+                         <select><option></option></select>
+                    </div>
+                    <div class="form-group col-2 mb-0">
+                         <label class="inline-label">Moneda</label>
+                         <select><option></option></select>
+                    </div>
+                    <div class="form-group col-3 mb-0">
+                         <label class="inline-label">Depósito Inicial</label>
+                         <input type="text" placeholder="$">
+                    </div>
+                </div>
+
+                <div class="section-divider">Comunicaciones y Estado de Cuentas</div>
+                
+                <div class="form-row align-center-row">
+                    <label class="col-4">Envío de Correspondencia/ Estado de Cuenta:</label>
+                    <div class="col-8">
+                        <label class="radio-label"><input type="radio" name="envio_estado"> Dirección Principal</label>
+                    </div>
+                </div>
+                <div class="form-row align-center-row">
+                    <label class="col-4">Correo Electrónico para envío de Facturación Electrónica / Estado de Cuenta Digital</label>
+                    <div class="col-8">
+                        <input type="text" class="w-100">
+                    </div>
+                </div>
+                
+                <div class="form-row terms-row mt-2">
+                    <p class="cols-10 text-small"><strong>ACEPTO</strong> recibir los comprobantes de todas las transacciones realizadas a través de los Multicanales BB. <strong>ESTOY DE ACUERDO</strong> en que el Banco Bolivariano C.A. me comunique a través de medios escritos, telefónicos o electrónicos, de las novedades, promociones y noticias interesantes del Banco Bolivariano C.A.</p>
+                    <div class="col-2 terms-radio">
+                         <label class="radio-label"><input type="radio" name="acepto"> Si</label>
+                         <label class="radio-label"><input type="radio" name="acepto"> No</label>
+                    </div>
+                </div>
+
+                <!-- Checking Account section -->
+                <div class="section-divider">Información de Cuenta Corriente</div>
+                <div class="chequera-layout">
+                    <div class="chequera-col-1">
+                        <label>Cantidad de Cheques</label>
+                        <div class="radio-list">
+                            <label><input type="radio" name="cant_cheques"> 50</label>
+                            <label><input type="radio" name="cant_cheques"> 100</label>
+                            <label><input type="radio" name="cant_cheques"> 300</label>
+                        </div>
+                    </div>
+                    <div class="chequera-col-2">
+                        <div class="inline-radio-group mb-2">
+                            <label>Tipo de Cheques</label>
+                            <label><input type="radio" name="tipo_cheques"> Con Talón</label>
+                            <label><input type="radio" name="tipo_cheques"> Sin Talón</label>
+                        </div>
+                        <div class="form-group">
+                            <label>Oficina Retiro</label>
+                            <select><option></option></select>
+                        </div>
+                    </div>
+                    <div class="chequera-col-3">
+                        <div class="form-group">
+                            <label>Nombre Chequera</label>
+                            <input type="text">
+                        </div>
+                        <div class="form-row m-0">
+                            <div class="form-group col-6">
+                                <label>C.I. Autorizado a retirar chequera</label>
+                                <input type="text">
+                            </div>
+                            <div class="form-group col-6">
+                                <label>Nombre Autorizado</label>
+                                <input type="text">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider">Contactos</div>
+                
+                <div class="form-row align-bottom">
+                    <div class="form-group col-2"><label>Nombres</label><input type="text"></div>
+                    <div class="form-group col-2"><label>Apellidos</label><input type="text"></div>
+                    <div class="form-group col-2"><label>Cargo</label><input type="text"></div>
+                    <div class="form-group col-2"><label>Correo Electrónico</label><input type="text"></div>
+                    <div class="form-group col-1"><label>Tipo Teléf.</label><select><option></option></select></div>
+                    <div class="form-group col-1"><label>Región</label><select><option></option></select></div>
+                    <div class="form-group col-1"><label>Teléfono</label><input type="text"></div>
+                    <div class="form-group col-1"><label>Ext.</label><input type="text"></div>
+                    <div class="col-1"><button class="btn btn-primary add-btn">Añadir</button></div>
+                </div>
+                
+                <table class="data-table small-table mt-2">
+                    <thead><tr><th>Nombres</th><th>Apellidos</th><th>Cargo</th><th>Correo electrónico</th><th>Tipo</th><th>Región</th><th>Teléfono</th><th>Ext</th><th></th></tr></thead>
+                    <tbody>
+                        <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                        <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                            <td class="actions-cell p-0 text-center"><i class="fa-solid fa-pen action-icon mt-1"></i> <i class="fa-solid fa-trash btn-delete mt-1"></i></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TAB 3: Condiciones de Firmas -->
+            <div id="tab-firmas" class="tab-pane" style="display: none;">
+                <div class="form-row bg-grey-input">
+                    <div class="form-group col-2">
+                         <label>Identificación</label>
+                         <input type="text" disabled>
+                    </div>
+                    <div class="form-group col-10">
+                         <label>Razón Social</label>
+                         <input type="text" disabled>
+                    </div>
+                </div>
+
+                <div class="section-divider">Inclusión de Firmantes de Cuentas</div>
+                
+                <div class="form-row align-bottom">
+                    <div class="form-group col-2">
+                        <label>Tipo de Id</label>
+                        <select><option></option></select>
+                    </div>
+                    <div class="form-group col-3">
+                        <label>No. de Identificación</label>
+                        <input type="text">
+                    </div>
+                    <div class="form-group col-4 bg-grey-input">
+                        <label>Nombres y Apellidos (Firmas)</label>
+                        <input type="text" disabled>
+                    </div>
+                    <div class="col-2">
+                        <button class="btn btn-primary w-100">Añadir Firmante</button>
+                    </div>
+                    <div class="col-3">
+                        <button class="btn btn-primary w-100 dark-btn">Ingresar / Actualizar <br> Información PN</button>
+                    </div>
+                </div>
+
+                <table class="data-table small-table mt-2 mb-3">
+                    <thead>
+                        <tr>
+                            <th>Tipo ID</th>
+                            <th>No. Identificación</th>
+                            <th>Nombres y Apellidos</th>
+                            <th>Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Cédula</td>
+                            <td>0915149388</td>
+                            <td>José Bolivar Arcos Pineda</td>
+                            <td class="actions-cell text-center">
+                                <i class="fa-solid fa-pen action-icon"></i>
+                                <i class="fa-solid fa-trash btn-delete"></i>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="section-divider">Combinaciones de Firmas</div>
+                
+                <div class="form-row align-bottom">
+                    <div class="form-group col-4">
+                        <label>Individual</label>
+                        <input type="text">
+                    </div>
+                    <div class="form-group col-4">
+                        <label>Conjuntas</label>
+                        <input type="text">
+                    </div>
+                    <div class="form-group col-3 radio-input-combo">
+                        <label>Monto</label>
+                        <div class="combo-wrapper">
+                             <label class="radio-label"><input type="radio" name="monto_limit"> ilimitado</label>
+                             <input type="text" placeholder="$0.00">
+                        </div>
+                    </div>
+                    <div class="col-1">
+                        <button class="btn btn-primary add-btn">Añadir</button>
+                    </div>
+                </div>
+
+                 <table class="data-table small-table mt-2">
+                    <thead>
+                        <tr>
+                            <th>Individual</th>
+                            <th>Conjuntas</th>
+                            <th>Monto</th>
+                            <th>Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td class="actions-cell text-center p-0">
+                                <i class="fa-solid fa-pen action-icon mt-1"></i>
+                                <i class="fa-solid fa-trash btn-delete mt-1"></i>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TAB 4: Beneficiarios Finales -->
+            <div id="tab-beneficiarios" class="tab-pane" style="display: none;">
+                <!-- Content for tab 4 (similar structure if needed, slide not fully shown but context implies lists/forms) -->
+                <p>Contenido de Beneficiarios Finales...</p>
+            </div>
+
+            <div class="form-footer-actions">
+                <button class="btn btn-outline" onclick="navigateTo('view-dashboard')">Bandeja</button>
+                <button class="btn btn-outline" onclick="prevTab()">Anterior</button>
+                <button class="btn btn-primary" onclick="alert('Guardado correctamente!')">Guardar</button>
+                <button class="btn btn-outline" onclick="nextTab()">Siguiente</button>
+            </div>
+            
+            <div class="form-pagination">
+                <p>&lt; Página <span id="currentPg">1</span> de 4 página(s) &gt;</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
