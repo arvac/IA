@@ -165,6 +165,8 @@
       line-height: 1;
     }
 
+    .toast { position:fixed; right:16px; bottom:16px; background:#0c7f84; color:#fff; padding:10px 14px; border-radius:8px; display:none; z-index:120; }
+
     .rules {
       margin: 20px auto;
       max-width: 900px;
@@ -218,12 +220,16 @@
 
     <div class="panel">
       <div class="row cols-6">
-        <div class="field"><label>Fecha de Ingreso Inicio</label><input placeholder="dd/mm/aaaa" /></div>
-        <div class="field"><label>Fecha de Ingreso Fin</label><input placeholder="dd/mm/aaaa" /></div>
+        <div class="field"><label>Fecha de Ingreso Inicio</label><input id="fInicio" placeholder="dd/mm/aaaa" /></div>
+        <div class="field"><label>Fecha de Ingreso Fin</label><input id="fFin" placeholder="dd/mm/aaaa" /></div>
         <div class="field"><label>RUC</label><input id="searchRuc" /></div>
-        <div class="field"><label>Razón social</label><input /></div>
-        <div class="field"><label>Oficial/Ejecutivo Solicitante</label><select><option>Usuario COBIS</option></select></div>
-        <div class="field"><label>Estado</label><select><option>Todos</option><option>Solicitud ingresada</option><option>Excepción</option></select></div>
+        <div class="field"><label>Razón social</label><input id="searchRazon" /></div>
+        <div class="field"><label>Oficial/Ejecutivo Solicitante</label><select id="searchOficial"><option value="">Todos</option><option>xxxxxxxx</option><option>Usuario COBIS</option></select></div>
+        <div class="field"><label>Estado</label><select id="searchEstado"><option>Todos</option><option>Solicitud ingresada</option><option>Excepción</option><option>Listo para crear</option></select></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+        <button class="btn" onclick="clearFilters()">Limpiar</button>
+        <button class="btn primary" onclick="applyFilters()">Buscar</button>
       </div>
     </div>
 
@@ -247,7 +253,11 @@
         <tbody id="trayBody"></tbody>
       </table>
     </div>
-    <p class="page-counter">&lt; Página 1 de 1 página(s) &gt;<br/>3 registros encontrados</p>
+    <p class="page-counter" id="trayCounter"></p>
+    <div class="footer-nav" style="padding-top:0">
+      <button class="btn" onclick="prevTrayPage()">Anterior</button>
+      <button class="btn" onclick="nextTrayPage()">Siguiente</button>
+    </div>
   </section>
 
   <section id="pj" class="screen">
@@ -338,6 +348,8 @@
   </div>
 </div>
 
+<div id="toast" class="toast"></div>
+
 <script>
   const state = {
     trayRows: [
@@ -345,23 +357,32 @@
       { fecha:'15/01/2026', nro:'00000002', ruc:'0915874589001', razon:'Comercial La Moneda', oficial:'xxxxxxxx', oficina:'Policentro', caso:'', estado:'Excepción', canDelete:true },
       { fecha:'10/01/2026', nro:'00000001', ruc:'1687569389001', razon:'Restaurant La Laguna', oficial:'xxxxxxxx', oficina:'Urdesa', caso:'', estado:'Listo para crear', canDelete:false }
     ],
+    filteredRows: [],
+    trayPage: 1,
+    perPage: 2,
     selectedDelete: null,
     pjStep: 0,
     pnStep: 0,
     residency: 'Ecuador',
-    labor: 'Dependiente'
+    labor: 'Dependiente',
+    contacts: [{nombres:'Juan',apellidos:'Pérez',cargo:'Gerente',correo:'jp@empresa.com',telefono:'0988888888'}],
+    signers: [{tipo:'Cédula',id:'0915149388',nombre:'José Bolívar Arcos Pineda'}],
+    beneficiaries: [{tipo:'Cédula',id:'0915149388',nombre:'José Bolívar Arcos Pineda',actividad:'Servicios',nacionalidad:'Ecuatoriana',pep:'No'}]
   };
 
   const pjTabs = [
-    'Información del Cliente PJ',
-    'Información Producto',
-    'Condiciones de firmas',
-    'Beneficiarios Finales',
-    'Información de cliente PN'
+    'Información del Cliente PJ','Información Producto','Condiciones de firmas','Beneficiarios Finales','Información de cliente PN'
   ];
 
+  const screenEls = () => document.querySelectorAll('.screen');
+  function toast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.style.display='block';
+    clearTimeout(window.__toast); window.__toast=setTimeout(()=>t.style.display='none',1800);
+  }
+
   function go(screenId) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    screenEls().forEach(s => s.classList.remove('active'));
     document.getElementById(screenId).classList.add('active');
     if (screenId === 'bandeja') renderTray();
     if (screenId === 'pj') renderPj();
@@ -369,33 +390,74 @@
   }
 
   function openPjNew() {
-    state.pjStep = 0;
-    state.pnStep = 0;
+    state.pjStep = 0; state.pnStep = 0;
+    document.getElementById('pj-ident').value='';
+    document.getElementById('pj-razon').value='';
     go('pj');
   }
 
-  function renderTray() {
-    const body = document.getElementById('trayBody');
-    body.innerHTML = state.trayRows.map((r, i) => `
-      <tr>
-        <td>${r.fecha}</td>
-        <td>${r.nro}</td>
-        <td><a href="#" onclick="event.preventDefault();openPjByRow(${i})">${r.ruc}</a></td>
-        <td>${r.razon}</td>
-        <td>${r.oficial}</td>
-        <td>${r.oficina}</td>
-        <td>${r.caso}</td>
-        <td>${r.estado}</td>
-        <td>
-          <button class="btn icon" onclick="openPjByRow(${i})">✏️</button>
-          ${r.canDelete ? `<button class="btn icon" onclick="openDelete(${i})">🗑️</button>` : ''}
-        </td>
-      </tr>
-    `).join('');
+  function getFilters(){
+    return {
+      ruc: document.getElementById('searchRuc').value.trim().toLowerCase(),
+      razon: document.getElementById('searchRazon').value.trim().toLowerCase(),
+      oficial: document.getElementById('searchOficial').value.trim().toLowerCase(),
+      estado: document.getElementById('searchEstado').value.trim().toLowerCase()
+    };
   }
+
+  function applyFilters(){
+    const f=getFilters();
+    state.filteredRows = state.trayRows.filter(r=>{
+      const matchRuc = !f.ruc || r.ruc.toLowerCase().includes(f.ruc);
+      const matchRazon = !f.razon || r.razon.toLowerCase().includes(f.razon);
+      const matchOf = !f.oficial || r.oficial.toLowerCase().includes(f.oficial);
+      const matchEst = f.estado==='todos' || !f.estado || r.estado.toLowerCase()===f.estado;
+      return matchRuc && matchRazon && matchOf && matchEst;
+    });
+    state.trayPage=1;
+    renderTray();
+    toast('Filtros aplicados');
+  }
+
+  function clearFilters(){
+    ['searchRuc','searchRazon','searchOficial','searchEstado','fInicio','fFin'].forEach(id=>{
+      const el=document.getElementById(id); if(!el) return; if(el.tagName==='SELECT'){el.selectedIndex=0}else{el.value=''}
+    });
+    state.filteredRows=[...state.trayRows];
+    state.trayPage=1;
+    renderTray();
+  }
+
+  function currentRows(){ return state.filteredRows.length ? state.filteredRows : state.trayRows; }
+
+  function renderTray() {
+    const rows=currentRows();
+    const maxPage=Math.max(1,Math.ceil(rows.length/state.perPage));
+    state.trayPage=Math.min(state.trayPage,maxPage);
+    const init=(state.trayPage-1)*state.perPage;
+    const pageRows=rows.slice(init, init+state.perPage);
+
+    const body = document.getElementById('trayBody');
+    body.innerHTML = pageRows.map((r) => {
+      const originalIndex = state.trayRows.findIndex(x=>x.nro===r.nro);
+      return `<tr>
+        <td>${r.fecha}</td><td>${r.nro}</td>
+        <td><a href="#" onclick="event.preventDefault();openPjByRow(${originalIndex})">${r.ruc}</a></td>
+        <td>${r.razon}</td><td>${r.oficial}</td><td>${r.oficina}</td><td>${r.caso}</td><td>${r.estado}</td>
+        <td><button class="btn icon" onclick="openPjByRow(${originalIndex})">✏️</button>
+          ${r.canDelete ? `<button class="btn icon" onclick="openDelete(${originalIndex})">🗑️</button>` : ''}
+        </td></tr>`;
+    }).join('') || '<tr><td colspan="9" style="text-align:center">Sin resultados</td></tr>';
+
+    document.getElementById('trayCounter').innerHTML = `&lt; Página ${state.trayPage} de ${maxPage} página(s) &gt;<br/>${rows.length} registros encontrados`;
+  }
+
+  function prevTrayPage(){ if(state.trayPage>1){ state.trayPage--; renderTray(); } }
+  function nextTrayPage(){ const maxPage=Math.max(1,Math.ceil(currentRows().length/state.perPage)); if(state.trayPage<maxPage){ state.trayPage++; renderTray(); } }
 
   function openPjByRow(i) {
     const row = state.trayRows[i];
+    if (!row) return;
     document.getElementById('pj-ident').value = row.ruc;
     document.getElementById('pj-razon').value = row.razon;
     state.pjStep = 0;
@@ -407,320 +469,127 @@
     document.getElementById('deleteReason').value = '';
     document.getElementById('deleteModal').style.display = 'flex';
   }
-
-  function closeDelete() {
-    document.getElementById('deleteModal').style.display = 'none';
-  }
+  function closeDelete() { document.getElementById('deleteModal').style.display = 'none'; }
 
   function confirmDelete() {
     const reason = document.getElementById('deleteReason').value.trim();
-    if (!reason) {
-      alert('Debe ingresar motivo de eliminación.');
-      return;
-    }
+    if (!reason) return alert('Debe ingresar motivo de eliminación.');
     if (state.selectedDelete !== null) state.trayRows.splice(state.selectedDelete, 1);
+    state.filteredRows=[];
     state.selectedDelete = null;
     closeDelete();
     renderTray();
+    toast('Solicitud eliminada');
   }
 
-  function saveMock() { alert('Información guardada (simulación).'); }
+  function saveMock() { toast('Información guardada'); }
 
   function renderPjTabs() {
     const tabs = document.getElementById('pjTabs');
     tabs.innerHTML = pjTabs.map((t,i) => `<div class="tab ${state.pjStep===i?'active':''}" onclick="jumpPj(${i})">${t}</div>`).join('');
   }
 
-  function jumpPj(i){
-    if (i === 4) { go('pn'); return; }
-    state.pjStep = i;
+  function jumpPj(i){ if (i === 4) return go('pn'); state.pjStep = i; renderPj(); }
+  function pjPrev(){ if (state.pjStep>0) state.pjStep--; renderPj(); }
+  function pjNext(){ if (state.pjStep<3){ state.pjStep++; renderPj(); } else go('pn'); }
+
+  function addContact(){
+    const nombres=document.getElementById('ctNombres').value.trim();
+    const apellidos=document.getElementById('ctApellidos').value.trim();
+    if(!nombres||!apellidos) return alert('Ingrese nombres y apellidos del contacto');
+    state.contacts.push({
+      nombres, apellidos,
+      cargo:document.getElementById('ctCargo').value.trim(),
+      correo:document.getElementById('ctCorreo').value.trim(),
+      telefono:document.getElementById('ctTelefono').value.trim(),
+    });
     renderPj();
   }
+  function deleteContact(i){ state.contacts.splice(i,1); renderPj(); }
 
-  function pjPrev() {
-    if (state.pjStep > 0) state.pjStep--;
+  function addSigner(){
+    const tipo=document.getElementById('sgTipo').value;
+    const id=document.getElementById('sgId').value.trim();
+    const nombre=document.getElementById('sgNombre').value.trim();
+    if(!id||!nombre) return alert('Complete identificación y nombre del firmante');
+    state.signers.push({tipo,id,nombre});
     renderPj();
   }
+  function deleteSigner(i){ state.signers.splice(i,1); renderPj(); }
 
-  function pjNext() {
-    if (state.pjStep < 3) {
-      state.pjStep++;
-      renderPj();
-    } else {
-      go('pn');
-    }
+  function addBeneficiary(){
+    const tipo=document.getElementById('bfTipo').value;
+    const id=document.getElementById('bfId').value.trim();
+    const nombre=document.getElementById('bfNombre').value.trim();
+    if(!id||!nombre) return alert('Complete identificación y nombre del beneficiario');
+    state.beneficiaries.push({tipo,id,nombre,actividad:document.getElementById('bfAct').value.trim(),nacionalidad:document.getElementById('bfNac').value.trim(),pep:document.querySelector('input[name="pep"]:checked')?.value||'No'});
+    renderPj();
   }
+  function deleteBeneficiary(i){ state.beneficiaries.splice(i,1); renderPj(); }
 
   function renderPj() {
     renderPjTabs();
     document.getElementById('pjPage').textContent = state.pjStep + 1;
     const c = document.getElementById('pjStepContainer');
     if (state.pjStep === 0) {
-      c.innerHTML = `
-        <div class="section-title">Información de la Empresa</div>
-        <div class="row cols-5">
-          <div class="field"><label>Razón Social</label><input value="${document.getElementById('pj-razon').value || ''}"></div>
-          <div class="field"><label>Fecha de constitución</label><input placeholder="dd/mm/aaaa"></div>
-          <div class="field"><label>País Constitución/Nacionalidad</label><select><option>Ecuador</option><option>Otro</option></select></div>
-          <div class="field"><label>Tipo de Cía</label><select><option>Limitada</option><option>Anónima</option></select></div>
-          <div class="field"><label>Sector</label><select><option>Público</option><option>Privado</option><option>Mixto</option></select></div>
-        </div>
-        <div class="row cols-3" style="margin-top:8px">
-          <div class="field"><label>Actividad económica</label><select><option>Comercio</option><option>Servicios</option></select></div>
-          <div class="field"><label>Actividad económica detallada</label><input></div>
-          <div class="field"><label>Nombre Comercial</label><input></div>
-        </div>
-
-        <div class="section-title">Información de Dirección - Ecuador</div>
-        <div class="row cols-5">
-          <div class="field"><label>Ciudad</label><select><option>Guayaquil</option></select></div>
-          <div class="field"><label>Ciudadela</label><input></div>
-          <div class="field"><label>Cantón</label><input></div>
-          <div class="field"><label>Parroquia</label><input></div>
-          <div class="field"><label>Dirección Comercial</label><input></div>
-        </div>
-        <div class="row cols-4" style="margin-top:8px">
-          <div class="field"><label>Sector</label><input></div>
-          <div class="field"><label>Referencia</label><input></div>
-          <div class="field"><label>Teléfono convencional</label><input></div>
-          <div class="field"><label>Ext.</label><input></div>
-        </div>
-      `;
+      c.innerHTML = `<div class="section-title">Información de la Empresa</div>
+      <div class="row cols-5">
+      <div class="field"><label>Razón Social</label><input value="${document.getElementById('pj-razon').value || ''}"></div>
+      <div class="field"><label>Fecha de constitución</label><input placeholder="dd/mm/aaaa"></div>
+      <div class="field"><label>País Constitución/Nacionalidad</label><select><option>Ecuador</option><option>Otro</option></select></div>
+      <div class="field"><label>Tipo de Cía</label><select><option>Limitada</option><option>Anónima</option></select></div>
+      <div class="field"><label>Sector</label><select><option>Público</option><option>Privado</option><option>Mixto</option></select></div></div>
+      <div class="row cols-3" style="margin-top:8px"><div class="field"><label>Actividad económica</label><select><option>Comercio</option><option>Servicios</option></select></div><div class="field"><label>Actividad económica detallada</label><input></div><div class="field"><label>Nombre Comercial</label><input></div></div>
+      <div class="section-title">Información de Dirección - Ecuador</div>
+      <div class="row cols-5"><div class="field"><label>Ciudad</label><select><option>Guayaquil</option></select></div><div class="field"><label>Ciudadela</label><input></div><div class="field"><label>Cantón</label><input></div><div class="field"><label>Parroquia</label><input></div><div class="field"><label>Dirección Comercial</label><input></div></div>`;
     } else if (state.pjStep === 1) {
-      c.innerHTML = `
-        <div class="section-title">Comunicaciones y Estado de Cuentas</div>
-        <div class="row cols-4">
-          <div class="field"><label>Tipo de Cuenta</label>
-            <div class="radio-group"><label><input type="radio" name="tcu" checked>Ahorro</label><label><input type="radio" name="tcu">Corriente</label></div>
-          </div>
-          <div class="field"><label>Producto Bancario</label><select><option>Cuenta empresarial</option></select></div>
-          <div class="field"><label>Moneda</label><select><option>USD</option></select></div>
-          <div class="field"><label>Depósito Inicial</label><input value="300"></div>
-        </div>
-        <div class="row cols-2" style="margin-top:8px">
-          <div class="field"><label>Correo Electrónico para envío de estado de cuenta</label><input value="cliente@empresa.com"></div>
-          <div class="field"><label>Autorización</label><div class="radio-group"><label><input type="radio" name="aut" checked>Sí</label><label><input type="radio" name="aut">No</label></div></div>
-        </div>
-
-        <div class="section-title">Información de Cuenta Corriente</div>
-        <div class="row cols-4">
-          <div class="field"><label>Cantidad de Cheques</label><div class="radio-group"><label><input type="radio" name="ch" checked>50</label><label><input type="radio" name="ch">100</label><label><input type="radio" name="ch">300</label></div></div>
-          <div class="field"><label>Tipo de Cheques</label><div class="radio-group"><label><input type="radio" name="tc" checked>Con Talón</label><label><input type="radio" name="tc">Sin Talón</label></div></div>
-          <div class="field"><label>Nombre Chequera</label><input></div>
-          <div class="field"><label>Oficina Retiro</label><select><option>Matriz</option></select></div>
-        </div>
-
-        <div class="section-title">Contactos</div>
-        <div class="row cols-6">
-          <div class="field"><label>Nombres</label><input></div>
-          <div class="field"><label>Apellidos</label><input></div>
-          <div class="field"><label>Cargo</label><input></div>
-          <div class="field"><label>Correo Electrónico</label><input></div>
-          <div class="field"><label>Teléfono</label><input></div>
-          <div class="field" style="display:flex;align-items:end;"><button class="btn primary" onclick="alert('Contacto añadido (simulación)')">Añadir</button></div>
-        </div>
-        <div class="table-wrap" style="margin-top:8px;">
-          <table><thead><tr><th>Nombres</th><th>Apellidos</th><th>Cargo</th><th>Correo</th><th>Teléfono</th><th>Acciones</th></tr></thead><tbody><tr><td>Juan</td><td>Pérez</td><td>Gerente</td><td>jp@empresa.com</td><td>0988888888</td><td>✏️ 🗑️</td></tr></tbody></table>
-        </div>
-      `;
+      c.innerHTML = `<div class="section-title">Comunicaciones y Estado de Cuentas</div>
+      <div class="row cols-4"><div class="field"><label>Tipo de Cuenta</label><div class="radio-group"><label><input type="radio" name="tcu" checked>Ahorro</label><label><input type="radio" name="tcu">Corriente</label></div></div><div class="field"><label>Producto Bancario</label><select><option>Cuenta empresarial</option></select></div><div class="field"><label>Moneda</label><select><option>USD</option></select></div><div class="field"><label>Depósito Inicial</label><input value="300"></div></div>
+      <div class="section-title">Contactos</div>
+      <div class="row cols-6"><div class="field"><label>Nombres</label><input id="ctNombres"></div><div class="field"><label>Apellidos</label><input id="ctApellidos"></div><div class="field"><label>Cargo</label><input id="ctCargo"></div><div class="field"><label>Correo Electrónico</label><input id="ctCorreo"></div><div class="field"><label>Teléfono</label><input id="ctTelefono"></div><div class="field" style="display:flex;align-items:end;"><button class="btn primary" onclick="addContact()">Añadir</button></div></div>
+      <div class="table-wrap" style="margin-top:8px;"><table><thead><tr><th>Nombres</th><th>Apellidos</th><th>Cargo</th><th>Correo</th><th>Teléfono</th><th>Acciones</th></tr></thead><tbody>
+      ${state.contacts.map((x,i)=>`<tr><td>${x.nombres}</td><td>${x.apellidos}</td><td>${x.cargo}</td><td>${x.correo}</td><td>${x.telefono}</td><td><button class='btn icon' onclick='deleteContact(${i})'>🗑️</button></td></tr>`).join('')}
+      </tbody></table></div>`;
     } else if (state.pjStep === 2) {
-      c.innerHTML = `
-        <div class="section-title">Inclusión de Firmantes de Cuentas</div>
-        <div class="row cols-5">
-          <div class="field"><label>Tipo de Id</label><select><option>Cédula</option></select></div>
-          <div class="field"><label>No. de Identificación</label><input value="0915149388"></div>
-          <div class="field"><label>Nombres y Apellidos (Firmas)</label><input value="José Bolívar Arcos Pineda"></div>
-          <div class="field" style="display:flex;align-items:end;"><button class="btn primary" onclick="alert('Firmante añadido')">Añadir Firmante</button></div>
-          <div class="field" style="display:flex;align-items:end;"><button class="btn primary" onclick="go('pn')">Ingresar / Actualizar PN</button></div>
-        </div>
-        <div class="table-wrap" style="margin-top:8px;">
-          <table><thead><tr><th>Tipo ID</th><th>No. Identificación</th><th>Nombres y Apellidos</th><th>Acciones</th></tr></thead><tbody><tr><td>Cédula</td><td>0915149388</td><td>José Bolívar Arcos Pineda</td><td>✏️ 🗑️</td></tr></tbody></table>
-        </div>
-
-        <div class="section-title">Combinaciones de Firmas</div>
-        <div class="row cols-4">
-          <div class="field"><label>Individual</label><input></div>
-          <div class="field"><label>Conjuntas</label><input></div>
-          <div class="field"><label>Monto</label><input value="$0,00"></div>
-          <div class="field" style="display:flex;align-items:end;"><button class="btn primary" onclick="alert('Combinación añadida')">Añadir</button></div>
-        </div>
-      `;
+      c.innerHTML = `<div class="section-title">Inclusión de Firmantes de Cuentas</div>
+      <div class="row cols-5"><div class="field"><label>Tipo de Id</label><select id="sgTipo"><option>Cédula</option><option>Pasaporte</option></select></div><div class="field"><label>No. de Identificación</label><input id="sgId"></div><div class="field"><label>Nombres y Apellidos (Firmas)</label><input id="sgNombre"></div><div class="field" style="display:flex;align-items:end;"><button class="btn primary" onclick="addSigner()">Añadir Firmante</button></div><div class="field" style="display:flex;align-items:end;"><button class="btn primary" onclick="go('pn')">Ingresar / Actualizar PN</button></div></div>
+      <div class="table-wrap" style="margin-top:8px;"><table><thead><tr><th>Tipo ID</th><th>No. Identificación</th><th>Nombres y Apellidos</th><th>Acciones</th></tr></thead><tbody>${state.signers.map((x,i)=>`<tr><td>${x.tipo}</td><td>${x.id}</td><td>${x.nombre}</td><td><button class='btn icon' onclick='deleteSigner(${i})'>🗑️</button></td></tr>`).join('')}</tbody></table></div>`;
     } else {
-      c.innerHTML = `
-        <div class="section-title">Datos Generales de Accionistas / Beneficiarios Finales</div>
-        <div class="switch-row" style="margin:8px 0">
-          <span>¿Existe información en sitio público?</span>
-          <div class="radio-group"><label><input type="radio" name="pub" checked>Sí</label><label><input type="radio" name="pub">No</label></div>
-          <div class="hint">Si existe, presenta información en MIS.</div>
-        </div>
-        <div class="row cols-5">
-          <div class="field"><label>Tipo Beneficiario</label><div class="radio-group"><label><input type="radio" name="tb" checked>Directo</label><label><input type="radio" name="tb">Indirecto</label></div></div>
-          <div class="field"><label>Tipo de Identificación</label><select><option>Cédula</option></select></div>
-          <div class="field"><label>Identificación</label><input value="0915149388"></div>
-          <div class="field"><label>Nombres Completos / Razón Social</label><input value="José Bolívar Arcos Pineda"></div>
-          <div class="field" style="display:flex;align-items:end;"><button class="btn primary" onclick="alert('Beneficiario añadido')">Añadir</button></div>
-        </div>
-        <div class="row cols-4" style="margin-top:8px">
-          <div class="field"><label>Porcentaje de Acciones</label><input value="25"></div>
-          <div class="field"><label>Actividad Económica</label><input></div>
-          <div class="field"><label>Nacionalidad</label><input value="Ecuatoriana"></div>
-          <div class="field"><label>Indicador PEP</label><div class="radio-group"><label><input type="radio" name="pep">Sí</label><label><input type="radio" name="pep" checked>No</label></div></div>
-        </div>
-        <div class="table-wrap" style="margin-top:8px;">
-          <table><thead><tr><th>Tipo ID</th><th>No. Identificación</th><th>Nombre</th><th>Actividad Económica</th><th>Nacionalidad</th><th>PEP</th><th>Acción</th></tr></thead><tbody><tr><td>Cédula</td><td>0915149388</td><td>José Bolívar Arcos Pineda</td><td>Servicios</td><td>Ecuatoriana</td><td>No</td><td>✏️ 🗑️</td></tr></tbody></table>
-        </div>
-        <div class="field" style="margin-top:10px"><label>Observaciones y Comentarios</label><textarea rows="3"></textarea></div>
-      `;
+      c.innerHTML = `<div class="section-title">Datos Generales de Accionistas / Beneficiarios Finales</div>
+      <div class="row cols-5"><div class="field"><label>Tipo de Identificación</label><select id="bfTipo"><option>Cédula</option><option>Pasaporte</option></select></div><div class="field"><label>Identificación</label><input id="bfId"></div><div class="field"><label>Nombres Completos / Razón Social</label><input id="bfNombre"></div><div class="field"><label>Actividad Económica</label><input id="bfAct"></div><div class="field"><label>Nacionalidad</label><input id="bfNac"></div></div>
+      <div class="row cols-4" style="margin-top:8px"><div class="field"><label>Indicador PEP</label><div class="radio-group"><label><input type="radio" name="pep" value="Sí">Sí</label><label><input type="radio" name="pep" value="No" checked>No</label></div></div><div class="field" style="display:flex;align-items:end;"><button class="btn primary" onclick="addBeneficiary()">Añadir</button></div></div>
+      <div class="table-wrap" style="margin-top:8px;"><table><thead><tr><th>Tipo ID</th><th>No. Identificación</th><th>Nombre</th><th>Actividad Económica</th><th>Nacionalidad</th><th>PEP</th><th>Acción</th></tr></thead><tbody>${state.beneficiaries.map((x,i)=>`<tr><td>${x.tipo}</td><td>${x.id}</td><td>${x.nombre}</td><td>${x.actividad}</td><td>${x.nacionalidad}</td><td>${x.pep}</td><td><button class='btn icon' onclick='deleteBeneficiary(${i})'>🗑️</button></td></tr>`).join('')}</tbody></table></div>`;
     }
   }
 
   function pnPrev(){ if (state.pnStep>0){ state.pnStep--; renderPn(); } }
-  function pnNext(){
-    if (state.pnStep<2){ state.pnStep++; renderPn(); }
-    else { go('resumen'); }
-  }
-
+  function pnNext(){ if (state.pnStep<2){ state.pnStep++; renderPn(); } else { go('resumen'); } }
   function setResidency(v){ state.residency=v; renderPn(); }
   function setLabor(v){ state.labor=v; renderPn(); }
 
   function renderPn(){
     document.getElementById('pnPage').textContent = state.pnStep + 1;
     const c = document.getElementById('pnStepContainer');
-
     if (state.pnStep===0){
       const showForeign = state.residency !== 'Ecuador';
-      c.innerHTML = `
-        <div class="section-title">Información General del Cliente</div>
-        <div class="grid-annot">
-          <div>
-            <div class="row cols-5">
-              <div class="field"><label>Tipo de Id</label><select><option>Cédula</option><option>Pasaporte</option></select></div>
-              <div class="field"><label>No. de Identificación</label><input value="0915149388"></div>
-              <div class="field"><label>Fecha de Caducidad</label><input placeholder="dd/mm/aaaa"></div>
-              <div class="field"><label>Nombres</label><input value="José Bolívar"></div>
-              <div class="field"><label>Apellidos</label><input value="Arcos Pineda"></div>
-            </div>
-            <div class="row cols-6" style="margin-top:8px">
-              <div class="field"><label>Sexo</label><select><option>Masculino</option></select></div>
-              <div class="field"><label>Estado Civil</label><select><option>Casado</option></select></div>
-              <div class="field"><label>No. cargas familiares</label><input value="2"></div>
-              <div class="field"><label>Profesión</label><input value="Administrador"></div>
-              <div class="field"><label>Separación de bienes</label><div class="radio-group"><label><input type="radio" name="sep">Sí</label><label><input type="radio" name="sep" checked>No</label></div></div>
-              <div class="field"><label>País de residencia</label><select onchange="setResidency(this.value)"><option ${state.residency==='Ecuador'?'selected':''}>Ecuador</option><option ${state.residency!=='Ecuador'?'selected':''}>Estados Unidos</option></select></div>
-            </div>
-            <div style="margin-top:10px;font-weight:800;color:#193f71;">Preguntas de residencia fiscal CRS</div>
-            <label><input type="checkbox"> ¿Tiene residencia fiscal para efectos tributarios en Estados Unidos?</label><br/>
-            <label><input type="checkbox"> ¿Tiene residencia fiscal para efectos tributarios en otra jurisdicción diferente a Ecuador y Estados Unidos?</label>
-          </div>
-          <div class="hint">Si país de residencia es Ecuador no se habilita la siguiente sección.</div>
-        </div>
-
-        <div class="section-title" style="opacity:${showForeign?1:.45}">En Caso de ser Extranjero</div>
-        <div class="row cols-6" style="pointer-events:${showForeign?'auto':'none'}; opacity:${showForeign?1:.45}">
-          <div class="field"><label>Nro. de C.I/ Pasaporte</label><input></div>
-          <div class="field"><label>Años residencia</label><input></div>
-          <div class="field"><label>Fecha ingreso al país</label><input placeholder="MM/AAAA"></div>
-          <div class="field"><label>Fecha Expedición</label><input placeholder="MM/AAAA"></div>
-          <div class="field"><label>Fecha de caducidad</label><input placeholder="MM/AAAA"></div>
-          <div class="field"><label>País origen pasaporte</label><select><option>--</option></select></div>
-        </div>
-
-        <div class="section-title">Nivel Académico – Formación</div>
-        <div class="row cols-4">
-          <div class="field"><label>Estudios</label><select><option>Universitario</option></select></div>
-          <div class="field"><label>Entidad Educativa</label><input></div>
-          <div class="field"><label>Especialización</label><input></div>
-          <div class="field"><label>Título</label><input></div>
-        </div>
-      `;
+      c.innerHTML = `<div class="section-title">Información General del Cliente</div>
+      <div class="grid-annot"><div><div class="row cols-5"><div class="field"><label>Tipo de Id</label><select><option>Cédula</option><option>Pasaporte</option></select></div><div class="field"><label>No. de Identificación</label><input value="0915149388"></div><div class="field"><label>Fecha de Caducidad</label><input placeholder="dd/mm/aaaa"></div><div class="field"><label>Nombres</label><input value="José Bolívar"></div><div class="field"><label>Apellidos</label><input value="Arcos Pineda"></div></div><div class="row cols-6" style="margin-top:8px"><div class="field"><label>Sexo</label><select><option>Masculino</option></select></div><div class="field"><label>Estado Civil</label><select><option>Casado</option></select></div><div class="field"><label>No. cargas familiares</label><input value="2"></div><div class="field"><label>Profesión</label><input value="Administrador"></div><div class="field"><label>Separación de bienes</label><div class="radio-group"><label><input type="radio" name="sep">Sí</label><label><input type="radio" name="sep" checked>No</label></div></div><div class="field"><label>País de residencia</label><select onchange="setResidency(this.value)"><option ${state.residency==='Ecuador'?'selected':''}>Ecuador</option><option ${state.residency!=='Ecuador'?'selected':''}>Estados Unidos</option></select></div></div></div><div class="hint">Si país de residencia es Ecuador no se habilita la siguiente sección.</div></div>
+      <div class="section-title" style="opacity:${showForeign?1:.45}">En Caso de ser Extranjero</div><div class="row cols-6" style="pointer-events:${showForeign?'auto':'none'}; opacity:${showForeign?1:.45}"><div class="field"><label>Nro. de C.I/ Pasaporte</label><input></div><div class="field"><label>Años residencia</label><input></div><div class="field"><label>Fecha ingreso al país</label><input placeholder="MM/AAAA"></div><div class="field"><label>Fecha Expedición</label><input placeholder="MM/AAAA"></div><div class="field"><label>Fecha de caducidad</label><input placeholder="MM/AAAA"></div><div class="field"><label>País origen pasaporte</label><select><option>--</option></select></div></div>`;
     } else if (state.pnStep===1){
       const isInd = state.labor === 'Independiente';
-      c.innerHTML = `
-        <div class="section-title">Preguntas FATCA y CRS</div>
-        <div class="row cols-2">
-          <div class="field"><label>¿Desempeña funciones o cargos públicos (PEPS)?</label><div class="radio-group"><label><input type="radio" name="peps">Sí</label><label><input type="radio" name="peps" checked>No</label></div></div>
-          <div class="field"><label>¿Es usted familiar de una persona PEPS?</label><div class="radio-group"><label><input type="radio" name="fam">Sí</label><label><input type="radio" name="fam" checked>No</label></div></div>
-        </div>
-
-        <div class="section-title">Situación Laboral</div>
-        <div class="grid-annot">
-          <div>
-            <div class="row cols-6">
-              <div class="field"><label>Situación laboral</label><select onchange="setLabor(this.value)"><option ${state.labor==='Dependiente'?'selected':''}>Dependiente</option><option ${state.labor==='Independiente'?'selected':''}>Independiente</option></select></div>
-              <div class="field"><label>Tipo de empleado</label><select><option>Público</option><option>Privado</option></select></div>
-              <div class="field"><label>Tipo de contrato</label><select><option>Temporal</option><option>Permanente</option></select></div>
-              <div class="field"><label>Empleador</label><input></div>
-              <div class="field"><label>Cargo</label><input></div>
-              <div class="field"><label>Área</label><input></div>
-            </div>
-            <div class="row cols-4" style="margin-top:8px; opacity:${isInd?1:.45}; pointer-events:${isInd?'auto':'none'};">
-              <div class="field"><label>Actividad económica</label><input></div>
-              <div class="field"><label>Años experiencia</label><input></div>
-              <div class="field"><label>RUC</label><input></div>
-              <div class="field"><label>Obligado a llevar contabilidad</label><div class="radio-group"><label><input type="radio" name="cont">Sí</label><label><input type="radio" name="cont" checked>No</label></div></div>
-            </div>
-          </div>
-          <div class="hint">Los campos de Independiente se habilitan de acuerdo a la situación laboral.</div>
-        </div>
-
-        <div class="section-title">Direcciones y Teléfonos - Domicilio</div>
-        <div class="row cols-6">
-          <div class="field"><label>Ciudad</label><input></div>
-          <div class="field"><label>Parroquia</label><input></div>
-          <div class="field"><label>Sector</label><input></div>
-          <div class="field"><label>Teléfono</label><input></div>
-          <div class="field"><label>Ext.</label><input></div>
-          <div class="field"><label>Referencia</label><input></div>
-        </div>
-      `;
+      c.innerHTML = `<div class="section-title">Preguntas FATCA y CRS</div><div class="section-title">Situación Laboral</div>
+      <div class="grid-annot"><div><div class="row cols-6"><div class="field"><label>Situación laboral</label><select onchange="setLabor(this.value)"><option ${state.labor==='Dependiente'?'selected':''}>Dependiente</option><option ${state.labor==='Independiente'?'selected':''}>Independiente</option></select></div><div class="field"><label>Tipo de empleado</label><select><option>Público</option><option>Privado</option></select></div><div class="field"><label>Tipo de contrato</label><select><option>Temporal</option><option>Permanente</option></select></div><div class="field"><label>Empleador</label><input></div><div class="field"><label>Cargo</label><input></div><div class="field"><label>Área</label><input></div></div><div class="row cols-4" style="margin-top:8px; opacity:${isInd?1:.45}; pointer-events:${isInd?'auto':'none'};"><div class="field"><label>Actividad económica</label><input></div><div class="field"><label>Años experiencia</label><input></div><div class="field"><label>RUC</label><input></div><div class="field"><label>Obligado a llevar contabilidad</label><div class="radio-group"><label><input type="radio" name="cont">Sí</label><label><input type="radio" name="cont" checked>No</label></div></div></div></div><div class="hint">Los campos de Independiente se habilitan según situación laboral.</div></div>`;
     } else {
-      c.innerHTML = `
-        <div class="row cols-2">
-          <div>
-            <div class="section-title">Direcciones y Teléfonos - Trabajo</div>
-            <div class="row cols-5">
-              <div class="field"><label>Ciudad</label><input></div>
-              <div class="field"><label>Parroquia</label><input></div>
-              <div class="field"><label>Sector</label><input></div>
-              <div class="field"><label>Teléfono</label><input></div>
-              <div class="field"><label>Ext.</label><input></div>
-            </div>
-          </div>
-          <div>
-            <div class="section-title">Medios de Envío</div>
-            <div class="row cols-2">
-              <div class="field"><label>Correo</label><input></div>
-              <div class="field"><label>Celular</label><input></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="section-title">Estado de Situación Económica - Perfil Económico del Cliente</div>
-        <div class="row cols-6">
-          <div class="field"><label>Total Ingresos</label><input value="$"></div>
-          <div class="field"><label>Total Egresos</label><input value="$"></div>
-          <div class="field"><label>Ingresos Netos</label><input value="$"></div>
-          <div class="field"><label>Total Activos</label><input value="$"></div>
-          <div class="field"><label>Total Pasivos</label><input value="$"></div>
-          <div class="field"><label>Total</label><input value="$"></div>
-        </div>
-
-        <div class="section-title">Datos del Cónyuge</div>
-        <div class="row cols-6">
-          <div class="field"><label>Tipo de Id</label><select><option>Cédula</option></select></div>
-          <div class="field"><label>No. de Identificación</label><input></div>
-          <div class="field"><label>Fecha de Caducidad</label><input></div>
-          <div class="field"><label>Nombres</label><input></div>
-          <div class="field"><label>Apellidos</label><input></div>
-          <div class="field"><label>¿Reside en Ecuador?</label><div class="radio-group"><label><input type="radio" name="re" checked>Sí</label><label><input type="radio" name="re">No</label></div></div>
-        </div>
-      `;
+      c.innerHTML = `<div class="section-title">Estado de Situación Económica</div><div class="row cols-6"><div class="field"><label>Total Ingresos</label><input value="$"></div><div class="field"><label>Total Egresos</label><input value="$"></div><div class="field"><label>Ingresos Netos</label><input value="$"></div><div class="field"><label>Total Activos</label><input value="$"></div><div class="field"><label>Total Pasivos</label><input value="$"></div><div class="field"><label>Total</label><input value="$"></div></div>`;
     }
   }
 
-  renderTray();
-  renderPj();
-  renderPn();
+  document.getElementById('searchRuc').addEventListener('input', applyFilters);
+  document.getElementById('searchRazon').addEventListener('input', applyFilters);
+  document.getElementById('searchEstado').addEventListener('change', applyFilters);
+
+  state.filteredRows=[...state.trayRows];
+  renderTray(); renderPj(); renderPn();
 </script>
 </body>
 </html>
